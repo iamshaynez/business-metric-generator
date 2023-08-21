@@ -2,6 +2,10 @@ from datetime import timedelta, date
 import os, time
 from influxdb_client_3 import InfluxDBClient3, Point, WritePrecision
 import numpy as np
+from dotenv import load_dotenv
+
+# 载入 .env 文件中的环境变量
+load_dotenv()
 
 # 业务指标相关信息
 indices = [['IND_00000001','交易金额'], ['IND_00000002','交易笔数'], ['IND_00000003','交易笔均'], ['IND_00000004','发卡量'], ['IND_00000005','卡均交易笔数'], ['IND_00000006','卡均交易金额']]
@@ -9,14 +13,15 @@ dimensions_a = ['T0', 'T1', 'T2', 'T3'] # 卡等级
 dimensions_b = ['北方银行', '南方银行', '东部商业银行', '西部投资银行', '滨江区银行']
 dimensions_c = ['Wechat', 'Alipay', 'JDPay','ATM','POS','OB']
 
-start_date = date(2023, 1, 1)
-end_date = date(2023, 3, 1)
+start_date = date(2023, 8, 15)
+end_date = date(2023, 8, 21)
 
 token = os.getenv('INFLUXDB_TOKEN')
+print(f'{token} is loaded.')
 org = "Xiaowen Deployed"
 host = "https://us-east-1-1.aws.cloud2.influxdata.com"
 
-client = InfluxDBClient3(host=host, token=token, org=org, verify_ssl=False)
+client = InfluxDBClient3(host=host, token=token, org=org)
 
 database="Metric"
 

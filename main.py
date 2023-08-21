@@ -22,8 +22,6 @@ db_port = os.getenv('DB_PORT')
 engine = create_engine(f"mysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?ssl_ca={db_ssl_pem}", echo=False)
 
 # 业务指标相关信息
-index_ids = ['IND_00000001', 'IND_00000002']
-index_names = ['每日交易金额', '当月交易金额']
 indices = [['IND_00000001','交易金额'], ['IND_00000002','交易笔数'], ['IND_00000003','交易笔均'], ['IND_00000004','发卡量'], ['IND_00000005','卡均交易笔数'], ['IND_00000006','卡均交易金额']]
 dimensions_a = ['T0', 'T1', 'T2', 'T3'] # 卡等级
 dimensions_b = ['北方银行', '南方银行', '东部商业银行', '西部投资银行', '滨江区银行']

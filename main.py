@@ -1,53 +1,79 @@
+from dotenv import load_dotenv
+import os
 import pandas as pd
 import numpy as np
-import random
+from sqlalchemy import create_engine
+import mysql.connector
+from datetime import timedelta, date
 
-# 定义一个函数来生成涨跌幅度
-def generate_percentage_changes(n_periods, baseline=0.02, variability=0.01):
-    return [baseline + random.uniform(-variability, variability) for _ in range(n_periods)]
 
-# 定义主函数
-def generate_business_metric(start_date, end_date):
-    # 生成日期序列
-    date_range = pd.date_range(start_date, end_date)
-    
-    # 生成月度涨跌幅度，考虑到日期范围的长度可能不能被 30 整除
-    n_months = (len(date_range) + 29) // 30  # 使用加法和整除来向上取整
-    monthly_changes = generate_percentage_changes(n_months)
-    
-    # 生成季度涨跌幅度，考虑到日期范围的长度可能不能被 90 整除
-    n_quarters = (len(date_range) + 89) // 90  # 使用加法和整除来向上取整
-    quarterly_changes = generate_percentage_changes(n_quarters)
-    
-    # 初始化业务指标
-    business_metric = 100  # 可以设置为你希望的初始业务指标的值
-    
-    # 初始化业务指标列表
-    business_metrics = [business_metric]
-    
-    # 生成业务指标数据
-    for i, date in enumerate(date_range[1:], 1):
-        # 计算当月和当季的涨跌幅度
-        monthly_change = monthly_changes[i//30]
-        quarterly_change = quarterly_changes[i//90]
-        
-        # 计算当日业务指标
-        if date.month in [3, 6, 9, 12] and date.day == 30:  # 判断是否为季度末
-            daily_change = monthly_change + quarterly_change  # 季度末的涨跌幅度为月度和季度的和
-        else:
-            daily_change = monthly_change  # 其他时间的涨跌幅度为月度涨跌幅度
-            
-        # 计算当日业务指标
-        business_metric *= (1 + daily_change)
-        
-        # 将当日业务指标添加到列表中
-        business_metrics.append(business_metric)
-    
-    # 创建 DataFrame
-    df = pd.DataFrame({'date': date_range, 'business_metric': business_metrics})
-    
-    return df
+# 载入 .env 文件中的环境变量
+load_dotenv()
 
-# 使用函数生成业务指标数据
-df = generate_business_metric('2020-01-01', '2022-12-31')
-print(df)
+# 通过 os.getenv 访问环境变量
+db_host = os.getenv('DB_HOST')
+db_user = os.getenv('DB_USER')
+db_password = os.getenv('DB_PASSWORD')
+db_ssl_pem = os.getenv('DB_SSL_PEM')
+db_name = os.getenv('DB_NAME')
+db_port = os.getenv('DB_PORT')
+
+# 创建数据库引擎
+engine = create_engine(f"mysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?ssl_ca={db_ssl_pem}", echo=False)
+
+# 业务指标相关信息
+index_ids = ['IND_00000001', 'IND_00000002']
+index_names = ['每日交易金额', '当月交易金额']
+indices = [['IND_00000001','交易金额'], ['IND_00000002','交易笔数'], ['IND_00000003','交易笔均'], ['IND_00000004','发卡量'], ['IND_00000005','卡均交易笔数'], ['IND_00000006','卡均交易金额']]
+dimensions_a = ['T0', 'T1', 'T2', 'T3'] # 卡等级
+dimensions_b = ['北方银行', '南方银行', '东部商业银行', '西部投资银行', '滨江区银行']
+dimensions_c = ['Wechat', 'Alipay', 'JDPay','ATM','POS','OB']
+
+start_date = date(2020, 1, 1)
+end_date = date(2023, 6, 30)
+
+# 生成业务指标数据
+data = []
+for index in indices:
+    for dimension_a in dimensions_a:
+        for dimension_b in dimensions_b:
+            for dimension_c in dimensions_c:
+                d = start_date
+                measure_value = 1000
+                while d <= end_date:
+                    measure_value *= 1 + np.random.uniform(-0.02, 0.05)  # 涨幅随机
+                    data.append([
+                        index[0],
+                        index[1],
+                        dimension_a,
+                        dimension_b,
+                        dimension_c,
+                        '',
+                        '',
+                        '',
+                        '',
+                        measure_value,
+                        'Daily',
+                        d
+                    ])
+                    d += timedelta(days=1)
+
+# 将数据转换为 DataFrame
+df = pd.DataFrame(data, columns=[
+    'index_id',
+    'index_name',
+    'dimension_a',
+    'dimension_b',
+    'dimension_c',
+    'dimension_d',
+    'dimension_e',
+    'dimension_f',
+    'dimension_g',
+    'measure_value',
+    'update_frequency',
+    'rpt_dte'
+])
+
+# 将数据插入到 MySQL 数据库中
+df.to_sql('ads_kronos_mul_index', con=engine, if_exists='append', index=False)
+#print(df)

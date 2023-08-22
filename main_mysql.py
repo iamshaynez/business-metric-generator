@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine
 import mysql.connector
-from datetime import timedelta, date
-
+from datetime import timedelta, date, datetime
+from algorithm import generate_numbers
 
 # 载入 .env 文件中的环境变量
 load_dotenv()
@@ -27,19 +27,29 @@ dimensions_a = ['T0', 'T1', 'T2', 'T3'] # 卡等级
 dimensions_b = ['北方银行', '南方银行', '东部商业银行', '西部投资银行', '滨江区银行']
 dimensions_c = ['Wechat', 'Alipay', 'JDPay','ATM','POS','OB']
 
-start_date = date(2020, 1, 1)
-end_date = date(2023, 6, 30)
+start_date = date(2021, 1, 1)
+end_date = date(2023, 8, 30)
 
 # 生成业务指标数据
 data = []
 for index in indices:
     for dimension_a in dimensions_a:
+        rate_a = 1 + np.random.uniform(-0.5, 0)
+        #print(f'rate_a = {rate_a}')
         for dimension_b in dimensions_b:
+            rate_b = 1 + np.random.uniform(-0.5, 1.0)
             for dimension_c in dimensions_c:
+                rate_c = 1 + np.random.uniform(-0.5, 1.0)
+                rate_final = rate_a * rate_b * rate_c
+                #print(f'rate_final = {rate_final}')
+                diff = (end_date - start_date).days + 1
+                rates = generate_numbers(total_growth_rate=rate_final, num_numbers=diff)
+                #print(rates)
                 d = start_date
                 measure_value = 1000
+                i = 0
                 while d <= end_date:
-                    measure_value *= 1 + np.random.uniform(-0.02, 0.05)  # 涨幅随机
+                    #measure_value *= rates[i]
                     data.append([
                         index[0],
                         index[1],
@@ -50,11 +60,12 @@ for index in indices:
                         '',
                         '',
                         '',
-                        measure_value,
+                        measure_value * rates[i],
                         'Daily',
                         d
                     ])
                     d += timedelta(days=1)
+                    i += 1
 
 # 将数据转换为 DataFrame
 df = pd.DataFrame(data, columns=[

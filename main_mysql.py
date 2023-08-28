@@ -27,7 +27,7 @@ dimensions_a = ['T0', 'T1', 'T2', 'T3'] # 卡等级
 dimensions_b = ['北方银行', '南方银行', '东部商业银行', '西部投资银行', '滨江区银行']
 dimensions_c = ['Wechat', 'Alipay', 'JDPay','ATM','POS','OB']
 
-start_date = date(2022, 1, 1)
+start_date = date(2022, 6, 1)
 end_date = date(2023, 8, 30)
 
 # 生成业务指标数据
